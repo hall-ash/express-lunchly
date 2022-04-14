@@ -138,6 +138,38 @@ router.post("/:id/add-reservation/", async function(req, res, next) {
   }
 });
 
+// get reservation detail page
+router.get("/reservations/:id", async (req, res, next) => {
+  try {
+    const reservation = await Reservation.get(req.params.id);
+
+    const customer = await Customer.get(reservation.customerId);
+
+    res.render("reservation_detail.html", { customer, reservation });
+  } catch (e) {
+    return next(e);
+  }
+});
+
+// Edit the start time, number of guests, or notes for a reservation
+router.post("/reservations/:id", async (req, res, next) => {
+  try {
+    const reservation = await Reservation.get(req.params.id);
+    const { startAt, numGuests, notes } = req.body;
+
+    // update reservation
+    reservation.startAt = startAt;
+    reservation.numGuests = numGuests;
+    reservation.notes = notes;
+    
+    await reservation.save();
+
+    return res.redirect(`/reservations/${reservation.id}`)
+  } catch (err) {
+    return next(err);
+  }
+})
+
 
 
 
