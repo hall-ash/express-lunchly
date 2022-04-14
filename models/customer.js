@@ -106,6 +106,14 @@ class Customer {
     return await Reservation.getReservationsForCustomer(this.id);
   }
 
+  // get the most recent reservation
+  async mostRecentReservation() {
+    const reservations = await this.getReservations();
+
+    // return first (most recent) reservation if any
+    return reservations? reservations[0] : [];
+  }
+
   /** save this customer. */
 
   async save() {
@@ -135,6 +143,14 @@ class Customer {
   set notes(val) {
     this._notes = val ? val : "";
   }
+
+  async mostRecentReservation() {
+    const reservations = await this.getReservations();
+
+    // return first (most recent) reservation if any
+    return reservations ? reservations[0] : null;
+  }
+
 }
 
 module.exports = Customer;

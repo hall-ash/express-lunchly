@@ -67,18 +67,19 @@ class Reservation {
     return moment(this.startAt).format('MMMM Do YYYY, h:mm a');
   }
 
-  /** given a customer id, find their reservations. */
+  /** given a customer id, find their reservations. order reservations by most recent */
 
   static async getReservationsForCustomer(customerId) {
     const results = await db.query(
           `SELECT id, 
-           customer_id AS "customerId", 
-           num_guests AS "numGuests", 
-           start_at AS "startAt", 
-           notes AS "notes"
-         FROM reservations 
-         WHERE customer_id = $1`,
-        [customerId]
+          customer_id AS "customerId", 
+          num_guests AS "numGuests", 
+          start_at AS "startAt", 
+          notes AS "notes"
+          FROM reservations 
+          WHERE customer_id = $1
+          ORDER BY start_at`,
+          [customerId]
     );
 
     return results.rows.map(row => new Reservation(row));

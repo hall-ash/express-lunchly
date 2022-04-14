@@ -22,7 +22,13 @@
   {% else %}
     <ul style="column-count: 4">
       {% for customer in customers %}
-      <li><a href="/{{ customer.id }}/">{{ customer.fullName }}</a></li>
+      <li>
+        <a href="/{{ customer.id }}/">{{ customer.fullName }}</a>
+        {% if customer.mostRecentReservation %}
+         has a reservation on 
+        <a href="/reservations/{{ customer.mostRecentReservation.id }}">{{ customer.mostRecentReservation.startAt.toDateString() }}</a>
+        {% endif %}
+      </li>
       {% endfor %}
     </ul>
   {% endif %}

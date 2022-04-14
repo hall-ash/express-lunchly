@@ -11,7 +11,14 @@ const router = new express.Router();
 
 router.get("/", async function(req, res, next) {
   try {
-    const customers = await Customer.all();
+    let customers = await Customer.all();
+    
+    customers = await Promise.all(customers.map(async(c) => {
+      
+      c.mostRecentReservation = await c.mostRecentReservation();
+      return c;
+    }));
+
     return res.render("customer_list.html", { customers });
   } catch (err) {
     return next(err);
