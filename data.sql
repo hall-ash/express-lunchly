@@ -6,6 +6,7 @@ DROP TABLE IF EXISTS customers;
 CREATE TABLE customers (
     id integer PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
     first_name text NOT NULL,
+    middle_name text DEFAULT NULL,
     last_name text NOT NULL,
     phone text,
     notes text DEFAULT '' NOT NULL
@@ -331,3 +332,7 @@ SELECT pg_catalog.setval('public.reservations_id_seq', 200, true);
 
 CREATE INDEX reservations_customer_id_idx ON public.reservations USING btree (customer_id);
 CREATE INDEX reservations_start_at_idx ON public.reservations USING btree (start_at);
+
+
+SELECT * FROM customers
+WHERE first_name ILIKE '%mid%' OR last_name ILIKE '%mid%' OR middle_name ILIKE '%mid%';
