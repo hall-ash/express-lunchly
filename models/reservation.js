@@ -9,11 +9,11 @@ const db = require("../db");
 
 class Reservation {
   constructor({id, customerId, numGuests, startAt, notes}) {
-    this.id = id;
-    this.customerId = customerId;
-    this.numGuests = numGuests;
-    this.startAt = startAt;
-    this.notes = notes;
+    this._id = id;
+    this._customerId = customerId;
+    this._numGuests = numGuests;
+    this._startAt = startAt;
+    this._notes = notes;
   }
 
   /** formatter for startAt */
@@ -37,6 +37,53 @@ class Reservation {
     );
 
     return results.rows.map(row => new Reservation(row));
+  }
+
+  // save the reservation
+  async save() {
+    if (this.id === undefined) { // create a new reservation if it does not exist
+      const result = await db.query(`
+        INSERT INTO reservations
+        (customer_id, start_at, num_guests, notes)
+        VALUES ($1, $2, $3, $4)
+        RETURNING id
+      `, [this.customerId, this.startAt, this.numGuests, this.notes]);
+      
+      this.id = result.rows[0].id;
+    } else { // reservation exists, save data
+      await db.query(`
+        UPDATE reservations
+        SET customer_id = $1, start_at = $2, num_guests = $3, notes = $4
+        WHERE id = $5
+      `[this.customerId, this.startAt, this.numGuests, this.notes, this.id]);
+    }
+  }
+
+  get numGuests() {
+    return this._numGuests;
+  }
+
+  set numGuests(val) {
+    if (val < 1) throw new Error("The number of guests must be at least 1.");
+    this._numGuests = val; 
+  }
+
+  get startAt() {
+    return this._startAt;
+  }
+
+  set startAt(val) {
+    this._startAt = new Date(val);
+  }
+
+  get customerId() {
+    return this._customerId;
+  }
+
+  set customerId(val) {
+    if (this._customerId) {
+      throw new Error ("Cannot change customer id.");
+    }
   }
 }
 

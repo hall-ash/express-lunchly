@@ -4,12 +4,31 @@
 
 <a class="btn btn-primary" style="float: right" href="/add/">Add a Customer</a></p>
 
-<h1>Customers</h1>
+<h1>
+  {% if best %}
+  Our Best Customers
+  {% else %}
+  Customers
+  {% endif %}
+</h1>
 
-<ul style="column-count: 4">
-  {% for customer in customers %}
-  <li><a href="/{{ customer.id }}/">{{ customer.firstName }} {{ customer.lastName }}</a></li>
-  {% endfor %}
-</ul>
+{% if customers|length %}
+  {% if best %}
+    <ol>
+      {% for customer in customers %}
+      <li><a href="/{{ customer.id }}/">{{ customer.fullName }}</a></li>
+      {% endfor %}
+    </ol>
+  {% else %}
+    <ul style="column-count: 4">
+      {% for customer in customers %}
+      <li><a href="/{{ customer.id }}/">{{ customer.fullName }}</a></li>
+      {% endfor %}
+    </ul>
+  {% endif %}
+{% else %}
+  <h3>No customers found.</h3>
+{% endif %}
+
 
 {% endblock %}

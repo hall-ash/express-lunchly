@@ -14,6 +14,19 @@ class Customer {
     this.notes = notes;
   }
 
+  // returns a list of Customer objects from a Result object
+  static getCustomerObjects(results) {
+    return results.rows.map( c => {
+      return new Customer({ 
+        id: c.id, 
+        firstName: c.first_name, 
+        lastName: c.last_name, 
+        phone: c.phone, 
+        notes: c.notes
+      })
+    });
+  }
+
   /** find all customers. */
 
   static async all() {
@@ -53,6 +66,36 @@ class Customer {
     return new Customer(customer);
   }
 
+  // search for customers by name
+  // returns a list of Customers with matching first or last names
+  // returns empty list if no customers match
+  static async find(nameToFind) {
+    const results = await db.query(`
+      SELECT id, first_name, last_name, phone, notes
+      FROM customers
+      WHERE first_name ILIKE $1 OR last_name ILIKE $1
+    `, ['%' + nameToFind + '%']);
+
+    return this.getCustomerObjects(results);
+  } 
+
+  // return top 10 customers ordered by most reservations
+  static async getBestCustomers() {
+    const numCustomersToGet = 10;
+
+    const results = await db.query(`
+      SELECT c.id, c.first_name, c.last_name, c.phone, c.notes
+      FROM customers AS c 
+      INNER JOIN reservations AS r
+      ON c.id = r.customer_id
+      GROUP BY c.id
+      ORDER BY COUNT(r.customer_id) DESC
+      LIMIT $1
+    `, [numCustomersToGet]);
+
+    return this.getCustomerObjects(results);
+  }
+
   /** get all reservations for this customer. */
 
   async getReservations() {
@@ -62,7 +105,7 @@ class Customer {
   /** save this customer. */
 
   async save() {
-    if (this.id === undefined) {
+    if (this.id === undefined) { // create new customer if does not exist
       const result = await db.query(
         `INSERT INTO customers (first_name, last_name, phone, notes)
              VALUES ($1, $2, $3, $4)
@@ -70,13 +113,21 @@ class Customer {
         [this.firstName, this.lastName, this.phone, this.notes]
       );
       this.id = result.rows[0].id;
-    } else {
-      await db.query(
+    } else { // customer exists save customer data
+      await db.query( 
         `UPDATE customers SET first_name=$1, last_name=$2, phone=$3, notes=$4
              WHERE id=$5`,
         [this.firstName, this.lastName, this.phone, this.notes, this.id]
       );
     }
+  }
+
+  get fullName() {
+    return this.firstName + ' ' + this.lastName;
+  }
+
+  set notes(val) {
+    this._notes = val ? val : "";
   }
 }
 
