@@ -9,7 +9,8 @@ CREATE TABLE customers (
     middle_name text DEFAULT NULL,
     last_name text NOT NULL,
     phone text,
-    notes text DEFAULT '' NOT NULL
+    notes text DEFAULT '' NOT NULL,
+    customer_tokens TSVECTOR
 );
 
 CREATE TABLE reservations (
@@ -333,6 +334,42 @@ SELECT pg_catalog.setval('public.reservations_id_seq', 200, true);
 CREATE INDEX reservations_customer_id_idx ON public.reservations USING btree (customer_id);
 CREATE INDEX reservations_start_at_idx ON public.reservations USING btree (start_at);
 
+UPDATE customers
+SET middle_name = 'Middle'
+WHERE first_name ILIKE '%jess%';
 
-SELECT * FROM customers
-WHERE first_name ILIKE '%mid%' OR last_name ILIKE '%mid%' OR middle_name ILIKE '%mid%';
+UPDATE customers c1
+SET customer_tokens = to_tsvector(CONCAT(c1.first_name, ' ', c1.middle_name, ' ', c1.last_name, ' ', c1.phone))
+FROM customers c2;
+
+CREATE OR REPLACE FUNCTION get_customer_tokens()
+RETURNS TRIGGER AS
+$$
+BEGIN 
+NEW.customer_tokens = to_tsvector(CONCAT(NEW."first_name", ' ', NEW."middle_name", ' ', NEW."last_name", ' ', NEW."phone"));
+RETURN NEW;
+END;
+$$
+LANGUAGE 'plpgsql';
+
+CREATE TRIGGER get_customer_tokens
+BEFORE INSERT OR UPDATE ON customers 
+FOR EACH ROW 
+EXECUTE PROCEDURE get_customer_tokens();
+
+
+-- CREATE OR REPLACE FUNCTION get_tokens()
+-- RETURNS TRIGGER AS
+-- $$
+-- BEGIN 
+-- NEW.document_tokens = to_tsvector(CONCAT(NEW."document_text", ' ', NEW."more_text"));
+-- RETURN NEW;
+-- END;
+-- $$
+-- LANGUAGE 'plpgsql';
+
+-- CREATE TRIGGER get_tokens 
+-- BEFORE INSERT OR UPDATE ON documents 
+-- FOR EACH ROW 
+-- EXECUTE PROCEDURE get_tokens();
+

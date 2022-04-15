@@ -74,11 +74,25 @@ class Customer {
   // returns a list of Customers with matching first or last names
   // returns empty list if no customers match
   static async find(nameToFind) {
-    const results = await db.query(`
+    
+    let results; 
+
+    const USING_TSQUERY = false;
+
+    if (USING_TSQUERY) {
+      results = await db.query(`
       SELECT id, first_name, middle_name, last_name, phone, notes
       FROM customers
-      WHERE first_name ILIKE $1 OR last_name ILIKE $1 OR middle_name ILIKE $1
+      WHERE customer_tokens @@ to_tsquery($1)
+    `, [nameToFind + ':*']);
+    
+    } else {
+      results = await db.query(`
+      SELECT id, first_name, middle_name, last_name, phone, notes
+      FROM customers
+      WHERE first_name ILIKE $1 OR middle_name ILIKE $1 OR last_name ILIKE $1 
     `, ['%' + nameToFind + '%']);
+    }
 
     return this.getCustomerObjects(results);
   } 

@@ -58,8 +58,15 @@ router.get('/search', async (req, res, next) => {
   try {
     const { name } = req.query;
 
-    const customers = await Customer.find(name);
-  
+    // find customers with matching name
+    let customers = await Customer.find(name);
+
+    customers = await Promise.all(customers.map(async(c) => {
+      
+      c.mostRecentReservation = await c.mostRecentReservation();
+      return c;
+    }));
+    
     res.render("customer_list.html", { customers });
   } catch (err) {
     return next(err)

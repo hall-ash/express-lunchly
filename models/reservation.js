@@ -98,7 +98,15 @@ class Reservation {
     [id]
     );
 
-    return new Reservation(result.rows[0]); 
+    const reservation = results.rows[0];
+
+    if (reservation === undefined) {
+      const err = new Error(`No reservation with id ${id}`);
+      err.status = 404;
+      throw err;
+    }
+
+    return new Reservation(reservation); 
   }
 
   // save the reservation
